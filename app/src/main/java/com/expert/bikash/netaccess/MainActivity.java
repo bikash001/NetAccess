@@ -53,7 +53,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         stopButton.setOnClickListener(this);
         userText = (EditText) findViewById(R.id.userid);
         passText = (EditText) findViewById(R.id.password);
-
     }
 
     @Override
@@ -93,13 +92,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
+        SharedPreferences prefs = getSharedPreferences("BIKASH",MODE_PRIVATE);
+        Log.d("start",prefs.getString("STARTTIME","null data"));
+        Log.d("stop",prefs.getString("STOPTIME","null data"));
+        Log.d("errormsg",prefs.getString("ERROR", "null data"));
         Log.v("INSIDE ONCLICK","onclick");
         int id = v.getId();
         if (id == R.id.start) {
             Log.v("ONCLICK", "start");
             userName = userText.getText().toString();
             passwd = passText.getText().toString();
-            SharedPreferences prefs = getSharedPreferences("BIKASH",MODE_PRIVATE);
             boolean save = true;
             if (userName.isEmpty() || passwd.isEmpty()) {
                 userName = prefs.getString("USERID","");
@@ -120,6 +122,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 myService.putExtra("USERID",userName);
                 myService.putExtra("USERPWD",passwd);
                 startService(myService);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("START",new Timestamp(System.currentTimeMillis()).toString());
+                editor.apply();
             } else {
                 Toast toast = Toast.makeText(this,"Enter correct username and password",Toast.LENGTH_LONG);
                 toast.show();

@@ -40,12 +40,13 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
 public class RunAccess extends Service {
-    private String currUrl = "http://www.yahoo.com";
+    private String currUrl;
     private Timer timer;
     private Schedule task;
     SSLContext context;
     Document doc;
     String userid, passwd;
+    private boolean started = false;
 
 
     @Override
@@ -113,8 +114,11 @@ public class RunAccess extends Service {
 
     private void makeConnection() {
         try {
+            Log.d("DEBUG","one");
+            currUrl = "http://www.yahoo.com";
             doc = Jsoup.connect(currUrl).userAgent("Mozilla").get();
             if (doc.location().startsWith("https://nfw.iitm.ac.in")) {
+                Log.d("DEBUG","two");
                 Elements elements = doc.getElementsByTag("input");
                 Connection connection = Jsoup.connect("https://nfw.iitm.ac.in:1003/").userAgent("Mozilla");
                 for (Element el : elements) {
@@ -128,27 +132,53 @@ public class RunAccess extends Service {
                     }
                 }
                 doc = connection.post();
-                Log.d("doc",doc.html());
-                if (doc.location().contains("keepalive")) {
-                    Log.d("keepalive","yip");
-                    currUrl = doc.location();
+                Element el = doc.getElementsByTag("a").get(1);
+                currUrl = el.attr("href");
+                if (currUrl.contains("logout")) {
+                    Log.d("DEBUG","three");
+                    started = true;
+                    currUrl = currUrl.replace("logout","keepalive");
                     timer = new Timer();
                     task = new Schedule();
-                    timer.scheduleAtFixedRate(task,10000,190000);
+                    timer.scheduleAtFixedRate(task,190000,198000);
                 } else {
-                    Log.d("notkeepalive","yip");
-                        SharedPreferences preferences = getSharedPreferences("BIKASH",MODE_PRIVATE);
-                        SharedPreferences.Editor editor = preferences.edit();
-                        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-                        editor.putString("STOPTIME",timestamp.toString());
-                        editor.apply();
-                        MainActivity.online = false;
-                        stopSelf();
-                    }
+
+                    Log.d("DEBUG","four");
+                    SharedPreferences preferences = getSharedPreferences("BIKASH",MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("ERROR","logout one :");
+                    editor.apply();
+                    stopMyService();
                 }
+                Log.d("location",currUrl);
+            } else {
+                Log.d("DEBUG","five");
+                SharedPreferences preferences = getSharedPreferences("BIKASH",MODE_PRIVATE);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putString("ERROR","outside if :");
+                editor.apply();
+                stopMyService();
+            }
+
         } catch (IOException e) {
+            Log.d("DEBUG","six");
             e.printStackTrace();
+            SharedPreferences preferences = getSharedPreferences("BIKASH",MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putString("ERROR","try :"+e.toString());
+            editor.apply();
         }
+    }
+
+    private void stopMyService() {
+        Log.d("DEBUG","seven");
+        SharedPreferences preferences = getSharedPreferences("BIKASH",MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        editor.putString("STOPTIME",timestamp.toString());
+        editor.apply();
+        MainActivity.online = false;
+        stopSelf();
     }
 
     private void showNotification() {
@@ -172,8 +202,10 @@ public class RunAccess extends Service {
         @Override
         public void run() {
             try {
+                Log.d("DEBUG","eight");
                 doc = Jsoup.connect(currUrl).userAgent("Mozilla").get();
             } catch (IOException e) {
+                Log.d("DEBUG","nine");
                 Log.d("ERROR","in jsoup get");
                 e.printStackTrace();
                 timer.cancel();
