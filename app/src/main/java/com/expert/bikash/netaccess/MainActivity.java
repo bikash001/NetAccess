@@ -121,10 +121,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 myService = new Intent(this,RunAccess.class);
                 myService.putExtra("USERID",userName);
                 myService.putExtra("USERPWD",passwd);
-                startService(myService);
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putString("START",new Timestamp(System.currentTimeMillis()).toString());
                 editor.apply();
+                startService(myService);
             } else {
                 Toast toast = Toast.makeText(this,"Enter correct username and password",Toast.LENGTH_LONG);
                 toast.show();

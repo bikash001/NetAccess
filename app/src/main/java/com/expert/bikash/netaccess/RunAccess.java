@@ -183,18 +183,28 @@ public class RunAccess extends Service {
 
     private void showNotification() {
         Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                notificationIntent, 0);
+                notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notification = new NotificationCompat.Builder(this)
-                .setContentTitle("Title")
-                .setTicker("NetAccess")
-                .setContentText("text")
+                .setContentTitle("Netaccess")
+                .setContentText("Logged in with "+userid)
                 .setContentIntent(pendingIntent).build();
         startForeground(101,notification);
     }
 
     @Override
     public void onDestroy() {
+        timer.cancel();
+        if (currUrl.contains("keepalive")) {
+            currUrl = currUrl.replace("keepalive","logout");
+            try {
+                doc = Jsoup.connect(currUrl).get();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        stopMyService();
         super.onDestroy();
     }
 
