@@ -39,6 +39,13 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
+import cz.msebera.android.httpclient.HttpEntity;
+import cz.msebera.android.httpclient.client.methods.CloseableHttpResponse;
+import cz.msebera.android.httpclient.client.methods.HttpGet;
+import cz.msebera.android.httpclient.impl.client.CloseableHttpClient;
+import cz.msebera.android.httpclient.impl.client.HttpClients;
+import cz.msebera.android.httpclient.util.EntityUtils;
+
 public class RunAccess extends Service {
     private String currUrl;
     private Timer timer;
@@ -68,7 +75,12 @@ public class RunAccess extends Service {
         userid = intent.getStringExtra("USERID");
         passwd = intent.getStringExtra("USERPWD");
         showNotification();
+        sslHandsake();
+        makeConnection();
+        return START_NOT_STICKY;
+    }
 
+    private void sslHandsake() {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             InputStream caInput = new BufferedInputStream(getAssets().open("gdroot-g2.crt"));
@@ -108,8 +120,6 @@ public class RunAccess extends Service {
         } catch (KeyManagementException e) {
             e.printStackTrace();
         }
-        makeConnection();
-        return START_NOT_STICKY;
     }
 
     private void makeConnection() {
@@ -209,11 +219,26 @@ public class RunAccess extends Service {
     }
 
     private class Schedule extends TimerTask {
+
         @Override
         public void run() {
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            HttpGet httpGet;
+            CloseableHttpResponse httpResponse;
             try {
                 Log.d("DEBUG","eight");
-                doc = Jsoup.connect(currUrl).userAgent("Mozilla").get();
+                httpGet = new HttpGet(currUrl);
+                httpResponse = httpClient.execute(httpGet);
+                try {
+                    Log.d("apache", httpResponse.getStatusLine().toString());
+                    HttpEntity entity = httpResponse.getEntity();
+                    // do something useful with the response body
+                    // and ensure it is fully consumed
+                    EntityUtils.consume(entity);
+                } finally {
+                    httpResponse.close();
+                }
+//                doc = Jsoup.connect(currUrl).userAgent("Mozilla").get();
             } catch (IOException e) {
                 Log.d("DEBUG","nine");
                 Log.d("ERROR","in jsoup get");

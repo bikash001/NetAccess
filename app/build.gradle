@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.3.0'
     compile 'com.android.support:design:23.3.0'
     compile 'org.jsoup:jsoup:1.9.2'
+    compile group: 'cz.msebera.android' , name: 'httpclient', version: '4.4.1.1'
 }
